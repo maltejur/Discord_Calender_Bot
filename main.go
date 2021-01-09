@@ -17,7 +17,9 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 	if m.GuildID == "" { //Private message
-		return
+		messageprocessing.GetAppointments(s, m)
+	} else {
+		messageprocessing.SetAppointment(s, m)
 	}
 
 }
