@@ -1,6 +1,7 @@
 package database
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"log"
@@ -12,6 +13,8 @@ const (
 	Channel = 0
 	User    = 1
 )
+
+var lookupdb *sql.DB
 
 //WriteNewLookupEntry writes Channels of a new user in table
 func WriteNewLookupEntry(userID string, channels []messageprocessing.Channel) error {

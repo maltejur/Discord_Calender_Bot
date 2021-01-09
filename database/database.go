@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"time"
 
@@ -10,7 +11,6 @@ import (
 )
 
 var appointmentdb *sql.DB
-var lookupdb *sql.DB
 
 //Appointment is the basic type to store an apointment
 type Appointment struct {
@@ -108,6 +108,14 @@ func MakeNewChannelTable(channelID string) error {
 		description TEXT,
 		deadline TEXT NOT NULL,
 		type TEXT NOT NULL);`
+	_, err := appointmentdb.Exec(sqlStmt)
+	return err
+}
+
+//DeleteAppointment deletes an appointment with the values of ap
+func DeleteAppointment(channelID string, ap Appointment) error {
+	sqlStmt := fmt.Sprintf(`DELETE FROM "%s" WHERE description = "%s" AND deadline = "%s" AND type = "%s";`,
+		channelID, ap.description, ap.deadline.Format(time.UnixDate), ap.ty)
 	_, err := appointmentdb.Exec(sqlStmt)
 	return err
 }
