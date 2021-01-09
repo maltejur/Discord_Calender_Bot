@@ -25,7 +25,7 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func main() {
-	messageprocessing.Lookup = make(map[string]map[string][]messageprocessing.Channel)
+	messageprocessing.Lookup = make(map[string][]messageprocessing.Channel)
 	config := config.ReadConfigFile("config.yaml")
 
 	//OpenLogFile

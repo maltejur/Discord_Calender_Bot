@@ -5,11 +5,14 @@ import "github.com/bwmarrin/discordgo"
 //Channel Simplification of discordgo.Channel
 type Channel struct {
 	ID   string
-	name string
+	Name string
 }
 
 //Lookup table to all the Channels a person is memeber in, to recieve appointment information from database
-var Lookup map[string]map[string][]Channel
+var Lookup map[string][]Channel
+
+//KnownChannels List of all ChannelIDs the bot has appointments of
+var KnownChannels []string
 
 //GetAppointments is called when a private message is recieved, all apointments for the author are send
 func GetAppointments(s *discordgo.Session, m *discordgo.MessageCreate) {
