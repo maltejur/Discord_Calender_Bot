@@ -8,11 +8,11 @@ import (
 
 //Config Struct to store config data from config.yaml
 type Config struct {
-	Token              string `yaml:"token"`
-	Logfile            string `yaml:"logfile"`
-	Validtypes         string `yaml:"validtypes,flow"`
-	DatabaseFile       string `yaml:"databasefile"`
-	LookupDatabaseFile string `yaml:"lookupdatabasefile"`
+	Token              string   `yaml:"token"`
+	Logfile            string   `yaml:"logfile"`
+	Validtypes         []string `yaml:"validtypes,flow"`
+	DatabaseFile       string   `yaml:"databasefile"`
+	LookupDatabaseFile string   `yaml:"lookupdatabasefile"`
 }
 
 //ReadConfigFile parses file at path as yaml and returns result in Config struct

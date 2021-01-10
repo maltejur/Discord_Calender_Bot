@@ -14,12 +14,15 @@ import (
 )
 
 func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
+
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
 	if m.GuildID == "" { //Private message
+		//$all
 		messageprocessing.GetAppointments(s, m)
 	} else {
+		//$Action type dd.mm.yyyy hh:mm description
 		messageprocessing.SetAppointment(s, m)
 	}
 
@@ -34,6 +37,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	messageprocessing.ValidTypes = config.Validtypes
 	log.SetOutput(f)
 	log.Println("Start")
 	defer log.Println("End")

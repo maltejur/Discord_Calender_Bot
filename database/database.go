@@ -14,9 +14,10 @@ var appointmentdb *sql.DB
 
 //Appointment is the basic type to store an apointment
 type Appointment struct {
-	description string
-	deadline    time.Time
-	ty          string
+	Description string
+	Deadline    time.Time
+	Ty          string
+	Ch          Channel
 }
 
 //Channel Simplification of discordgo.Channel
@@ -78,11 +79,11 @@ func GetAppointmentsFromDatabase(channelID string) ([]Appointment, error) {
 		var id int
 		var ap Appointment
 		var deadline string
-		err = rows.Scan(&id, &ap.description, &deadline, &ap.ty)
+		err = rows.Scan(&id, &ap.Description, &deadline, &ap.Ty)
 		if err != nil {
 			return aps, err
 		}
-		ap.deadline, err = time.Parse(time.UnixDate, deadline)
+		ap.Deadline, err = time.Parse(time.UnixDate, deadline)
 		if err != nil {
 			return aps, err
 		}
@@ -103,7 +104,7 @@ func WriteAppointmentToDatabse(channelID string, ap Appointment) error {
 		return err
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(ap.description, ap.deadline.String(), ap.ty)
+	_, err = stmt.Exec(ap.Description, ap.Deadline.String(), ap.Ty)
 	return err
 }
 
@@ -121,7 +122,7 @@ func MakeNewChannelTable(channelID string) error {
 //DeleteAppointment deletes an appointment with the values of ap
 func DeleteAppointment(channelID string, ap Appointment) error {
 	sqlStmt := fmt.Sprintf(`DELETE FROM "%s" WHERE description = "%s" AND deadline = "%s" AND type = "%s";`,
-		channelID, ap.description, ap.deadline.Format(time.UnixDate), ap.ty)
+		channelID, ap.Description, ap.Deadline.Format(time.UnixDate), ap.Ty)
 	_, err := appointmentdb.Exec(sqlStmt)
 	return err
 }
