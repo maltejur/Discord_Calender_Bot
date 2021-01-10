@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -88,7 +89,7 @@ func SetAppointment(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 	message := strings.Split(m.Content[1:], " ")
 	description := strings.Join(message[4:], " ")
-	timeV := strings.Join(message[2:3], " ")
+	timeV := strings.Join(message[2:4], " ")
 	ty := message[1]
 	action := message[0]
 	var ap database.Appointment
@@ -128,36 +129,12 @@ func SetAppointment(s *discordgo.Session, m *discordgo.MessageCreate) {
 func newChannel(s *discordgo.Session, m *discordgo.MessageCreate) {
 	//New Channel
 	log.Printf("New Channel with ID %s\n", m.ChannelID)
+
 	c, err := s.Channel(m.ChannelID)
-	if err != nil {
-		log.Printf("Error recieving Channel Information, Error: %s \n", err.Error())
-		s.ChannelMessageSend(m.ChannelID, "An error occourd, the bot could not recieve Channel info")
-		return
-	}
-	err = database.MakeNewChannelTable(c.ID)
-	if err != nil {
-		log.Printf("Error making table in database: %s \n", err.Error())
-		s.ChannelMessageSend(m.ChannelID, "An error occourd, the bot could not make channel table")
-		return
-	}
-	database.WriteNewID(c.ID, c.Name, database.ChannelC)
-	ch := database.Channel{ID: c.ID, Name: c.Name}
-	KnownChannels[c.ID] = struct{}{}
-	er := false
-	for _, user := range c.Recipients {
-		_, ex := Lookup[user.ID]
-		if !ex {
-			err = database.WriteNewID(user.ID, user.Username, database.UserC)
-			if err != nil {
-				log.Printf("Error writing new userID in database: %s \n", err.Error())
-				er = true
-			}
-			err = database.NewUserTable(user.ID)
-			if err != nil {
-				log.Printf("Error making User table in database: %s \n", err.Error())
-				er = true
-			}
-		}
+
+	for _, invite := range invites {
+		user := invite.TargetUser
+
 		Lookup[user.ID] = append(Lookup[user.ID], ch)
 		err = database.WriteNewLookupEntry(user.ID, ch)
 		if err != nil {
@@ -167,5 +144,81 @@ func newChannel(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 	if er {
 		s.ChannelMessageSend(m.ChannelID, "An error occourd, adding new users to the lookupdb")
+	}
+}
+
+func newUserForChannel(user *discordgo.User, channel *discordgo.Channel) error {
+	_, ex := Lookup[user.ID]
+	if !ex {
+		err := database.WriteNewID(user.ID, user.Username, database.UserC)
+		if err != nil {
+			log.Printf("Error writing new userID in database: %s \n", err.Error())
+			return err
+		}
+		err = database.NewUserTable(user.ID)
+		if err != nil {
+			log.Printf("Error making User table in database: %s \n", err.Error())
+			return err
+		}
+	}
+	ch := database.Channel{ID: channel.ID, Name: channel.Name}
+	Lookup[user.ID] = append(Lookup[user.ID], ch)
+	err := database.WriteNewLookupEntry(user.ID, ch)
+	if err != nil {
+		log.Printf("Error writing NewLookupEntry: %s \n", err.Error())
+	}
+	return err
+}
+
+func populateLookupForGuild(c *discordgo.Channel, s *discordgo.Session) {
+	members, _ := s.GuildMembers(c.GuildID, "", 1000)
+	channels, _ := s.GuildChannels(c.GuildID)
+	for _, channel := range channels {
+		_, ex := KnownChannels[channel.ID]
+		if !ex {
+			err := database.MakeNewChannelTable(channel.ID)
+			if err != nil {
+				log.Printf("Error making table in database: %s \n", err.Error())
+				s.ChannelMessageSend(channel.ID, "An error occourd, the bot could not make channel table")
+				return
+			}
+			err = database.WriteNewID(channel.ID, channel.Name, database.ChannelC)
+			if err != nil {
+				log.Printf("Error writing new Channel: %s \n", err.Error())
+				s.ChannelMessageSend(channel.ID, "An error occourd, could not write new ChannelID")
+				return
+			}
+			KnownChannels[channel.ID] = struct{}{}
+			for _, member := range members{
+				for _, permission := range channel.PermissionOverwrites{
+					if permission.Type == "0"{//Role
+						for _, roleID := range member.Roles {
+							deny , _ := strconv.Atoi(permission.Deny)
+							if roleID == permission.ID && deny & 0x00000400 != 0x00000400 {
+								newUserForChannel(member.User, channel)
+							}
+						}
+					} else if permission.Type == "1"{ //Per Person
+
+					}
+				}
+			}
+		}
+	}
+
+}
+
+
+for _, permission := range channel.PermissionOverwrites {
+	if permission.Type == "0" { //Role
+		for _, member := range members {
+			for _, roleID := range member.Roles {
+				if roleID == permission.ID && permission.Deny != 1 {
+					newUserForChannel(member.User, channel)
+				}
+			}
+		}
+	} else if permission.Type == "1" { //Per Person
+		for _,mem
 	}
 }

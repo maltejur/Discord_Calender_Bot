@@ -18,6 +18,9 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
+	if m.Content[0] != '$' {
+		return
+	}
 	if m.GuildID == "" { //Private message
 		//$all
 		messageprocessing.GetAppointments(s, m)
@@ -42,8 +45,11 @@ func main() {
 	log.Println("Start")
 	defer log.Println("End")
 	defer f.Close()
+	database.InitDB(config.DatabaseFile, config.LookupDatabaseFile)
 	messageprocessing.InitLookups()
+
 	discord, err := discordgo.New("Bot " + config.Token)
+	discord.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsAll)
 	if err != nil {
 		log.Panic(err)
 	}

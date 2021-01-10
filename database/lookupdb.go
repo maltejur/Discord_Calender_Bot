@@ -108,9 +108,9 @@ func PopulateLookups() (map[string]struct{}, map[string][]Channel) {
 func WriteNewID(ID string, name string, table int) error {
 	var sqlStmt string
 	if table == ChannelC {
-		sqlStmt = `INSERT INTO Channels (channelID, channelName) VALUES (` + ID + "," + name + `);`
+		sqlStmt = fmt.Sprintf(`INSERT INTO Channels (channelID, channelName) VALUES ("%s","%s");`, ID, name)
 	} else if table == UserC {
-		sqlStmt = `INSERT INTO Users (userID,userName) VALUES (` + ID + "," + name + `);`
+		sqlStmt = fmt.Sprintf(`INSERT INTO Users (userID,userName) VALUES ("%s" ,"%s");`, ID, name)
 	} else {
 		return errors.New("WriteNewID wrong table")
 	}
