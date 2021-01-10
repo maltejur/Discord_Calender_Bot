@@ -9,6 +9,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/poodlenoodle42/Discord_Calender_Bot/config"
+	"github.com/poodlenoodle42/Discord_Calender_Bot/database"
 	"github.com/poodlenoodle42/Discord_Calender_Bot/messageprocessing"
 )
 
@@ -25,9 +26,9 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func main() {
-	messageprocessing.Lookup = make(map[string][]messageprocessing.Channel)
+	messageprocessing.Lookup = make(map[string][]database.Channel)
+	messageprocessing.KnownChannels = make(map[string]struct{})
 	config := config.ReadConfigFile("config.yaml")
-
 	//OpenLogFile
 	f, err := os.Create(config.Logfile)
 	if err != nil {
@@ -37,7 +38,7 @@ func main() {
 	log.Println("Start")
 	defer log.Println("End")
 	defer f.Close()
-
+	messageprocessing.InitLookups()
 	discord, err := discordgo.New("Bot " + config.Token)
 	if err != nil {
 		log.Panic(err)

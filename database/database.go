@@ -19,6 +19,12 @@ type Appointment struct {
 	ty          string
 }
 
+//Channel Simplification of discordgo.Channel
+type Channel struct {
+	ID   string
+	Name string
+}
+
 //InitDB opens database from file
 func InitDB(appath string, lopath string) {
 	dbb, err := sql.Open("sqlite3", appath)
