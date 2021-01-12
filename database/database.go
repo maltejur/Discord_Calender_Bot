@@ -104,7 +104,7 @@ func WriteAppointmentToDatabse(channelID string, ap Appointment) error {
 		return err
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(ap.Description, ap.Deadline.String(), ap.Ty)
+	_, err = stmt.Exec(ap.Description, ap.Deadline.Format(time.UnixDate), ap.Ty)
 	return err
 }
 

@@ -16,7 +16,7 @@ var lookupdb *sql.DB
 
 //NewUserTable creates table for new user in lookupdb
 func NewUserTable(userID string) error {
-	sqlStmt := `CREATE TABLE IF NOT EXISTS "` + userID + `"(
+	sqlStmt := `CREATE TABLE IF NOT EXISTS "` + userID + `" (
 		id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
 		channelID TEXT NOT NULL,
 		channelName TEXT NOT NULL);`
@@ -27,8 +27,8 @@ func NewUserTable(userID string) error {
 //WriteNewLookupEntry writes new Channels of a  user in table
 func WriteNewLookupEntry(userID string, channel Channel) error {
 
-	sqlStmt := fmt.Sprintf(`INSERT INTO "`+userID+`" (channelID,channelName) VALUES (%s,%s);`,
-		channel.ID, channel.Name)
+	sqlStmt := fmt.Sprintf(`INSERT INTO "%s" (channelID,channelName) VALUES ("%s","%s");`,
+		userID, channel.ID, channel.Name)
 	_, err := lookupdb.Exec(sqlStmt)
 	return err
 }
@@ -48,7 +48,12 @@ func readChannels() map[string]struct{} {
 	defer rows.Close()
 	for rows.Next() {
 		var channelID string
-		err = rows.Scan(&channelID)
+		var channelName string
+		var id int
+		err = rows.Scan(&id, &channelID, &channelName)
+		if err != nil {
+			log.Panic(err)
+		}
 		channels[channelID] = struct{}{}
 	}
 	return channels
@@ -69,7 +74,12 @@ func readUsers() []string {
 	defer rows.Close()
 	for rows.Next() {
 		var userID string
-		err = rows.Scan(&userID)
+		var id int
+		var userName string
+		err = rows.Scan(&id, &userID, &userName)
+		if err != nil {
+			log.Panic(err)
+		}
 		users = append(users, userID)
 	}
 	return users
@@ -96,7 +106,8 @@ func PopulateLookups() (map[string]struct{}, map[string][]Channel) {
 		defer rows.Close()
 		for rows.Next() {
 			var channel Channel
-			err = rows.Scan(&channel.ID, &channel.Name)
+			var id int
+			err = rows.Scan(&id, &channel.ID, &channel.Name)
 			channels = append(channels, channel)
 		}
 		lookup[user] = channels

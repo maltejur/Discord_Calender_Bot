@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -32,10 +31,11 @@ func InitLookups() {
 }
 
 func apointmentToString(ap apWithChannel) string {
-	return fmt.Sprintf(`%s: \n
-	\t %s \n
-	\t %s \n
-	\t %s \n`, ap.ch.ID, ap.ap.Deadline.Format("02.01.2006 15:04"), ap.ap.Ty, ap.ap.Description)
+	return fmt.Sprintf(`%s: 
+	%s 
+	%s 
+	%s
+`, ap.ch.Name, ap.ap.Deadline.Format("02.01.2006 15:04"), ap.ap.Ty, ap.ap.Description)
 }
 
 //GetAppointments is called when a private message is recieved, all apointments for the author are send
@@ -85,7 +85,8 @@ func isTypeValid(ty string) bool {
 func SetAppointment(s *discordgo.Session, m *discordgo.MessageCreate) {
 	_, ex := KnownChannels[m.ChannelID]
 	if !ex {
-		newChannel(s, m)
+		ch, _ := s.Channel(m.ChannelID)
+		populateLookupForGuild(ch, s)
 	}
 	message := strings.Split(m.Content[1:], " ")
 	description := strings.Join(message[4:], " ")
@@ -126,27 +127,6 @@ func SetAppointment(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
-func newChannel(s *discordgo.Session, m *discordgo.MessageCreate) {
-	//New Channel
-	log.Printf("New Channel with ID %s\n", m.ChannelID)
-
-	c, err := s.Channel(m.ChannelID)
-
-	for _, invite := range invites {
-		user := invite.TargetUser
-
-		Lookup[user.ID] = append(Lookup[user.ID], ch)
-		err = database.WriteNewLookupEntry(user.ID, ch)
-		if err != nil {
-			log.Printf("Error writing new lookupentry in database: %s \n", err.Error())
-			er = true
-		}
-	}
-	if er {
-		s.ChannelMessageSend(m.ChannelID, "An error occourd, adding new users to the lookupdb")
-	}
-}
-
 func newUserForChannel(user *discordgo.User, channel *discordgo.Channel) error {
 	_, ex := Lookup[user.ID]
 	if !ex {
@@ -171,54 +151,63 @@ func newUserForChannel(user *discordgo.User, channel *discordgo.Channel) error {
 }
 
 func populateLookupForGuild(c *discordgo.Channel, s *discordgo.Session) {
-	members, _ := s.GuildMembers(c.GuildID, "", 1000)
-	channels, _ := s.GuildChannels(c.GuildID)
+	members, err := s.GuildMembers(c.GuildID, "", 1000)
+	if err != nil {
+		log.Printf("Error getting members: %s \n", err.Error())
+		s.ChannelMessageSend(c.ID, "An error occourd, could not get members of guild")
+		return
+	}
+	channels, err := s.GuildChannels(c.GuildID)
+	if err != nil {
+		log.Printf("Error getting channels: %s \n", err.Error())
+		s.ChannelMessageSend(c.ID, "An error occourd, the bot could not get the channels of the guild")
+		return
+	}
 	for _, channel := range channels {
 		_, ex := KnownChannels[channel.ID]
 		if !ex {
 			err := database.MakeNewChannelTable(channel.ID)
 			if err != nil {
 				log.Printf("Error making table in database: %s \n", err.Error())
-				s.ChannelMessageSend(channel.ID, "An error occourd, the bot could not make channel table")
+				s.ChannelMessageSend(c.ID, "An error occourd, the bot could not make channel table")
 				return
 			}
 			err = database.WriteNewID(channel.ID, channel.Name, database.ChannelC)
 			if err != nil {
 				log.Printf("Error writing new Channel: %s \n", err.Error())
-				s.ChannelMessageSend(channel.ID, "An error occourd, could not write new ChannelID")
+				s.ChannelMessageSend(c.ID, "An error occourd, could not write new ChannelID")
 				return
 			}
 			KnownChannels[channel.ID] = struct{}{}
-			for _, member := range members{
-				for _, permission := range channel.PermissionOverwrites{
-					if permission.Type == "0"{//Role
+			for _, member := range members {
+			PermissionBreak:
+				for _, permission := range channel.PermissionOverwrites {
+					if permission.Type == "role" { //Role
 						for _, roleID := range member.Roles {
-							deny , _ := strconv.Atoi(permission.Deny)
-							if roleID == permission.ID && deny & 0x00000400 != 0x00000400 {
-								newUserForChannel(member.User, channel)
+							if roleID == permission.ID && permission.Allow&0x00000400 == 0x00000400 {
+								err = newUserForChannel(member.User, channel)
+								if err != nil {
+									log.Printf("Error writing new User for Channel: %s \n", err.Error())
+									s.ChannelMessageSend(c.ID, "An error occourd, could not write new User for Channel")
+									return
+								}
+								break PermissionBreak
 							}
 						}
-					} else if permission.Type == "1"{ //Per Person
-
+					} else if permission.Type == "member" { //Per Person
+						if member.User.ID == permission.ID && permission.Allow&0x00000400 == 0x00000400 {
+							err = newUserForChannel(member.User, channel)
+							if err != nil {
+								log.Printf("Error writing new User for Channel: %s \n", err.Error())
+								s.ChannelMessageSend(c.ID, "An error occourd, could not write new User for Channel")
+								return
+							}
+							break PermissionBreak
+						}
 					}
 				}
 			}
 		}
 	}
 
-}
-
-
-for _, permission := range channel.PermissionOverwrites {
-	if permission.Type == "0" { //Role
-		for _, member := range members {
-			for _, roleID := range member.Roles {
-				if roleID == permission.ID && permission.Deny != 1 {
-					newUserForChannel(member.User, channel)
-				}
-			}
-		}
-	} else if permission.Type == "1" { //Per Person
-		for _,mem
-	}
 }

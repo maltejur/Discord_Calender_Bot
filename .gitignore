@@ -17,3 +17,4 @@ config.yaml
 log.txt
 db.sqlite
 lookupdb.sqlite
+.vscode/

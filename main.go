@@ -49,7 +49,7 @@ func main() {
 	messageprocessing.InitLookups()
 
 	discord, err := discordgo.New("Bot " + config.Token)
-	discord.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsAll)
+	//discord.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsAll)
 	if err != nil {
 		log.Panic(err)
 	}
