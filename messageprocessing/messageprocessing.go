@@ -89,7 +89,16 @@ func SetAppointment(s *discordgo.Session, m *discordgo.MessageCreate) {
 		populateLookupForGuild(ch, s)
 	}
 	message := strings.Split(m.Content[1:], " ")
-	description := strings.Join(message[4:], " ")
+	var description string
+	if len(message) < 4 {
+		s.ChannelMessageSend(m.ChannelID, "Not enough arguments")
+		return
+	} else if len(message) == 5 {
+		description = ""
+	} else {
+		description = strings.Join(message[4:], " ")
+	}
+
 	timeV := strings.Join(message[2:4], " ")
 	ty := message[1]
 	action := message[0]
