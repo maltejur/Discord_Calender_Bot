@@ -13,6 +13,7 @@ type Config struct {
 	Validtypes         []string `yaml:"validtypes,flow"`
 	DatabaseFile       string   `yaml:"databasefile"`
 	LookupDatabaseFile string   `yaml:"lookupdatabasefile"`
+	HelpMessage        string   `yaml:"helpmessage"`
 }
 
 //ReadConfigFile parses file at path as yaml and returns result in Config struct

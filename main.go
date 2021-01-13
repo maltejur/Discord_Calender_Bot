@@ -13,6 +13,8 @@ import (
 	"github.com/poodlenoodle42/Discord_Calender_Bot/messageprocessing"
 )
 
+var helpMessage string
+
 func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	if m.Author.ID == s.State.User.ID {
@@ -22,8 +24,11 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 	if m.GuildID == "" { //Private message
-		//$all
-		messageprocessing.GetAppointments(s, m)
+		if m.Content[1:] == "help" {
+			s.ChannelMessageSend(m.ChannelID, helpMessage)
+		} else {
+			messageprocessing.GetAppointments(s, m)
+		}
 	} else {
 		//$Action type dd.mm.yyyy hh:mm description
 		messageprocessing.SetAppointment(s, m)
@@ -41,6 +46,7 @@ func main() {
 		panic(err)
 	}
 	messageprocessing.ValidTypes = config.Validtypes
+	helpMessage = config.HelpMessage
 	log.SetOutput(f)
 	log.Println("Start")
 	defer log.Println("End")

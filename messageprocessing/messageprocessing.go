@@ -124,6 +124,7 @@ func SetAppointment(s *discordgo.Session, m *discordgo.MessageCreate) {
 	} else {
 		log.Printf("Wrong action %s \n", action)
 		s.ChannelMessageSend(m.ChannelID, "Action not known")
+		return
 	}
 }
 
