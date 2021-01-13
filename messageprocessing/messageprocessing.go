@@ -123,7 +123,7 @@ func SetAppointment(s *discordgo.Session, m *discordgo.MessageCreate) {
 			s.ChannelMessageSend(m.ChannelID, "Could not delete appointment")
 			return
 		}
-		s.ChannelMessageSend(m.ChannelID, "Deleted appointment successful")
+		s.ChannelMessageSend(m.ChannelID, "Appointment deleted successfully")
 	} else if action == "add" {
 		err = database.WriteAppointmentToDatabse(m.ChannelID, ap)
 		if err != nil {
@@ -131,7 +131,7 @@ func SetAppointment(s *discordgo.Session, m *discordgo.MessageCreate) {
 			s.ChannelMessageSend(m.ChannelID, "Could not write appointment")
 			return
 		}
-		s.ChannelMessageSend(m.ChannelID, "Added appointment successful")
+		s.ChannelMessageSend(m.ChannelID, "Appointment added successfully")
 	} else {
 		log.Printf("Wrong action %s \n", action)
 		s.ChannelMessageSend(m.ChannelID, "Action not known")
