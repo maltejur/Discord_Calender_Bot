@@ -93,7 +93,7 @@ func SetAppointment(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if len(message) < 4 {
 		s.ChannelMessageSend(m.ChannelID, "Not enough arguments")
 		return
-	} else if len(message) == 5 {
+	} else if len(message) == 4 {
 		description = ""
 	} else {
 		description = strings.Join(message[4:], " ")
