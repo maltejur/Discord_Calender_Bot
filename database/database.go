@@ -119,6 +119,22 @@ func MakeNewChannelTable(channelID string) error {
 	return err
 }
 
+//CheckAppointmentExists checks if an appointment exists in the db, if exists: true, else false
+func CheckAppointmentExists(channelID string, ap Appointment) (bool, error) {
+	sqlStmt := fmt.Sprintf(`SELECT id FROM "%s" WHERE description = "%s" AND deadline = "%s" AND type = "%s";`,
+		channelID, ap.Description, ap.Deadline.Format(time.UnixDate), ap.Ty)
+	var id int
+	err := appointmentdb.QueryRow(sqlStmt).Scan(&id)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return false, err
+		}
+		return false, nil
+	}
+	return true, nil
+
+}
+
 //DeleteAppointment deletes an appointment with the values of ap
 func DeleteAppointment(channelID string, ap Appointment) error {
 	sqlStmt := fmt.Sprintf(`DELETE FROM "%s" WHERE description = "%s" AND deadline = "%s" AND type = "%s";`,

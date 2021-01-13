@@ -35,6 +35,7 @@ func apointmentToString(ap apWithChannel) string {
 	%s 
 	%s 
 	%s
+
 `, ap.ch.Name, ap.ap.Deadline.Format("02.01.2006 15:04"), ap.ap.Ty, ap.ap.Description)
 }
 
@@ -117,6 +118,15 @@ func SetAppointment(s *discordgo.Session, m *discordgo.MessageCreate) {
 	ap.Description = description
 	ap.Ty = ty
 	if action == "delete" {
+		ex, err = database.CheckAppointmentExists(m.ChannelID, ap)
+		if !ex {
+			s.ChannelMessageSend(m.ChannelID, "Appointment does not exist")
+			return
+		}
+		if err != nil {
+			log.Printf("Could not check if appointment exists, %s \n", err.Error())
+			return
+		}
 		err = database.DeleteAppointment(m.ChannelID, ap)
 		if err != nil {
 			log.Printf("Error deleting appointment, %s \n", err.Error())
@@ -125,6 +135,15 @@ func SetAppointment(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 		s.ChannelMessageSend(m.ChannelID, "Appointment deleted successfully")
 	} else if action == "add" {
+		ex, err = database.CheckAppointmentExists(m.ChannelID, ap)
+		if ex {
+			s.ChannelMessageSend(m.ChannelID, "Appointment already exists")
+			return
+		}
+		if err != nil {
+			log.Printf("Could not check if appointment exists, %s \n", err.Error())
+			return
+		}
 		err = database.WriteAppointmentToDatabse(m.ChannelID, ap)
 		if err != nil {
 			log.Printf("Error writing appointment, %s \n", err.Error())
