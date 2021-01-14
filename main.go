@@ -20,6 +20,9 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
+	if m.Content == "" {
+		return
+	}
 	if m.Content[0] != '$' {
 		return
 	}
