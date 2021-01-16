@@ -15,6 +15,7 @@ import (
 )
 
 var helpMessage string
+var waitBeforeDelete uint64
 
 func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
@@ -36,7 +37,7 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	} else {
 		//$Action type dd.mm.yyyy hh:mm description
 		var botM = messageprocessing.SetAppointment(s, m)
-		time.AfterFunc(3*time.Second, func() {
+		time.AfterFunc(time.Duration(waitBeforeDelete)*time.Second, func() {
 			err := s.ChannelMessageDelete(m.ChannelID, m.ID)
 			if err != nil {
 				log.Printf("Message could not be deleted: %s", err.Error())
@@ -63,6 +64,7 @@ func main() {
 	}
 	messageprocessing.ValidTypes = config.Validtypes
 	helpMessage = config.HelpMessage
+	waitBeforeDelete = config.WaitBeforeDelete
 	log.SetOutput(f)
 	log.Println("Start")
 	defer log.Println("End")

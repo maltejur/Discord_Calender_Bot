@@ -14,6 +14,7 @@ type Config struct {
 	DatabaseFile       string   `yaml:"databasefile"`
 	LookupDatabaseFile string   `yaml:"lookupdatabasefile"`
 	HelpMessage        string   `yaml:"helpmessage"`
+	WaitBeforeDelete   uint64   `yaml:"waitBeforeDelete"`
 }
 
 //ReadConfigFile parses file at path as yaml and returns result in Config struct
