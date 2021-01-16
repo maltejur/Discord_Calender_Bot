@@ -43,7 +43,7 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				log.Printf("Message could not be deleted: %s", err.Error())
 			}
 			if botM != nil {
-				s.ChannelMessageDelete(botM.ChannelID, botM.ID)
+				err = s.ChannelMessageDelete(botM.ChannelID, botM.ID)
 				if err != nil {
 					log.Printf("Message could not be deleted: %s", err.Error())
 				}
