@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/poodlenoodle42/Discord_Calender_Bot/config"
@@ -34,7 +35,11 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 	} else {
 		//$Action type dd.mm.yyyy hh:mm description
-		messageprocessing.SetAppointment(s, m)
+		botM := messageprocessing.SetAppointment(s, m)
+		time.AfterFunc(3*time.Second, func() {
+			s.ChannelMessageDelete(m.ChannelID, m.ID)
+			s.ChannelMessageDelete(botM.ChannelID, botM.ID)
+		})
 	}
 
 }

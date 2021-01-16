@@ -83,8 +83,9 @@ func isTypeValid(ty string) bool {
 }
 
 //SetAppointment is called when a "public" message is recieved attempting to set a new apointment
-func SetAppointment(s *discordgo.Session, m *discordgo.MessageCreate) {
+func SetAppointment(s *discordgo.Session, m *discordgo.MessageCreate) *discordgo.Message {
 	_, ex := KnownChannels[m.ChannelID]
+	var botM *discordgo.Message
 	if !ex {
 		ch, _ := s.Channel(m.ChannelID)
 		populateLookupForGuild(ch, s)
@@ -92,8 +93,8 @@ func SetAppointment(s *discordgo.Session, m *discordgo.MessageCreate) {
 	message := strings.Split(m.Content[1:], " ")
 	var description string
 	if len(message) < 4 {
-		s.ChannelMessageSend(m.ChannelID, "Not enough arguments")
-		return
+		botM, _ = s.ChannelMessageSend(m.ChannelID, "Not enough arguments")
+		return botM
 	} else if len(message) == 4 {
 		description = ""
 	} else {
@@ -105,14 +106,14 @@ func SetAppointment(s *discordgo.Session, m *discordgo.MessageCreate) {
 	action := message[0]
 	var ap database.Appointment
 	if !isTypeValid(ty) {
-		s.ChannelMessageSend(m.ChannelID, "Invalid Type")
-		return
+		botM, _ = s.ChannelMessageSend(m.ChannelID, "Invalid Type")
+		return botM
 	}
 	t, err := time.Parse("02.01.2006 15:04", timeV)
 	if err != nil {
 		log.Printf("Error parsing time %s, Error %s\n", timeV, err.Error())
-		s.ChannelMessageSend(m.ChannelID, "Time could not be parsed")
-		return
+		botM, _ = s.ChannelMessageSend(m.ChannelID, "Time could not be parsed")
+		return botM
 	}
 	ap.Deadline = t
 	ap.Description = description
@@ -120,43 +121,42 @@ func SetAppointment(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if action == "delete" {
 		ex, err = database.CheckAppointmentExists(m.ChannelID, ap)
 		if !ex {
-			s.ChannelMessageSend(m.ChannelID, "Appointment does not exist")
-			return
+			botM, _ = s.ChannelMessageSend(m.ChannelID, "Appointment does not exist")
+			return botM
 		}
 		if err != nil {
 			log.Printf("Could not check if appointment exists, %s \n", err.Error())
-			return
+			return botM
 		}
 		err = database.DeleteAppointment(m.ChannelID, ap)
 		if err != nil {
 			log.Printf("Error deleting appointment, %s \n", err.Error())
-			s.ChannelMessageSend(m.ChannelID, "Could not delete appointment")
-			return
+			botM, _ = s.ChannelMessageSend(m.ChannelID, "Could not delete appointment")
+			return botM
 		}
 		s.ChannelMessageSend(m.ChannelID, "Appointment deleted successfully")
 	} else if action == "add" {
 		ex, err = database.CheckAppointmentExists(m.ChannelID, ap)
 		if ex {
-			s.ChannelMessageSend(m.ChannelID, "Appointment already exists")
-			return
+			botM, _ = s.ChannelMessageSend(m.ChannelID, "Appointment already exists")
+			return botM
 		}
 		if err != nil {
 			log.Printf("Could not check if appointment exists, %s \n", err.Error())
-			return
+			return botM
 		}
 		err = database.WriteAppointmentToDatabse(m.ChannelID, ap)
 		if err != nil {
 			log.Printf("Error writing appointment, %s \n", err.Error())
-			s.ChannelMessageSend(m.ChannelID, "Could not write appointment")
-			return
+			botM, _ = s.ChannelMessageSend(m.ChannelID, "Could not write appointment")
+			return botM
 		}
-		s.ChannelMessageSend(m.ChannelID, "Appointment added successfully")
-	} else {
-		log.Printf("Wrong action %s \n", action)
-		s.ChannelMessageSend(m.ChannelID, "Action not known")
-		return
+		botM, _ = s.ChannelMessageSend(m.ChannelID, "Appointment added successfully")
+		return botM
 	}
-
+	log.Printf("Wrong action %s \n", action)
+	botM, _ = s.ChannelMessageSend(m.ChannelID, "Action not known")
+	return botM
 }
 
 func newUserForChannel(user *discordgo.User, channel *discordgo.Channel) error {
