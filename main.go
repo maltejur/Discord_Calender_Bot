@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/poodlenoodle42/Discord_Calender_Bot/config"
@@ -14,6 +15,7 @@ import (
 )
 
 var helpMessage string
+var waitBeforeDelete uint64
 
 func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
@@ -34,7 +36,19 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 	} else {
 		//$Action type dd.mm.yyyy hh:mm description
-		messageprocessing.SetAppointment(s, m)
+		var botM = messageprocessing.SetAppointment(s, m)
+		time.AfterFunc(time.Duration(waitBeforeDelete)*time.Second, func() {
+			err := s.ChannelMessageDelete(m.ChannelID, m.ID)
+			if err != nil {
+				log.Printf("Message could not be deleted: %s", err.Error())
+			}
+			if botM != nil {
+				s.ChannelMessageDelete(botM.ChannelID, botM.ID)
+				if err != nil {
+					log.Printf("Message could not be deleted: %s", err.Error())
+				}
+			}
+		})
 	}
 
 }
@@ -50,6 +64,7 @@ func main() {
 	}
 	messageprocessing.ValidTypes = config.Validtypes
 	helpMessage = config.HelpMessage
+	waitBeforeDelete = config.WaitBeforeDelete
 	log.SetOutput(f)
 	log.Println("Start")
 	defer log.Println("End")
