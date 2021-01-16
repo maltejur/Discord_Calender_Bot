@@ -35,10 +35,12 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 	} else {
 		//$Action type dd.mm.yyyy hh:mm description
-		botM := messageprocessing.SetAppointment(s, m)
+		var botM = messageprocessing.SetAppointment(s, m)
 		time.AfterFunc(3*time.Second, func() {
 			s.ChannelMessageDelete(m.ChannelID, m.ID)
-			s.ChannelMessageDelete(botM.ChannelID, botM.ID)
+			if botM != nil {
+				s.ChannelMessageDelete(botM.ChannelID, botM.ID)
+			}
 		})
 	}
 

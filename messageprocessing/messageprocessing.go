@@ -126,6 +126,7 @@ func SetAppointment(s *discordgo.Session, m *discordgo.MessageCreate) *discordgo
 		}
 		if err != nil {
 			log.Printf("Could not check if appointment exists, %s \n", err.Error())
+			botM, _ = s.ChannelMessageSend(m.ChannelID, "Could not check if appointment exists")
 			return botM
 		}
 		err = database.DeleteAppointment(m.ChannelID, ap)
