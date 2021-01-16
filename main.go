@@ -37,9 +37,15 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		//$Action type dd.mm.yyyy hh:mm description
 		var botM = messageprocessing.SetAppointment(s, m)
 		time.AfterFunc(3*time.Second, func() {
-			s.ChannelMessageDelete(m.ChannelID, m.ID)
+			err := s.ChannelMessageDelete(m.ChannelID, m.ID)
+			if err != nil {
+				log.Printf("Message could not be deleted: %s", err.Error())
+			}
 			if botM != nil {
 				s.ChannelMessageDelete(botM.ChannelID, botM.ID)
+				if err != nil {
+					log.Printf("Message could not be deleted: %s", err.Error())
+				}
 			}
 		})
 	}
