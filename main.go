@@ -14,8 +14,7 @@ import (
 	"github.com/poodlenoodle42/Discord_Calender_Bot/messageprocessing"
 )
 
-var helpMessage string
-var waitBeforeDelete uint64
+var configVar config.Config
 
 func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
@@ -30,25 +29,27 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 	if m.GuildID == "" { //Private message
 		if m.Content[1:] == "help" {
-			s.ChannelMessageSend(m.ChannelID, helpMessage)
+			s.ChannelMessageSend(m.ChannelID, configVar.HelpMessage)
 		} else {
 			messageprocessing.GetAppointments(s, m)
 		}
 	} else {
 		//$Action type dd.mm.yyyy hh:mm description
 		var botM = messageprocessing.SetAppointment(s, m)
-		time.AfterFunc(time.Duration(waitBeforeDelete)*time.Second, func() {
-			err := s.ChannelMessageDelete(m.ChannelID, m.ID)
-			if err != nil {
-				log.Printf("Message could not be deleted: %s\n", err.Error())
-			}
-			if botM != nil {
-				err = s.ChannelMessageDelete(botM.ChannelID, botM.ID)
+		if configVar.DeleteMessages {
+			time.AfterFunc(time.Duration(configVar.WaitBeforeDelete)*time.Second, func() {
+				err := s.ChannelMessageDelete(m.ChannelID, m.ID)
 				if err != nil {
 					log.Printf("Message could not be deleted: %s\n", err.Error())
 				}
-			}
-		})
+				if botM != nil {
+					err = s.ChannelMessageDelete(botM.ChannelID, botM.ID)
+					if err != nil {
+						log.Printf("Message could not be deleted: %s\n", err.Error())
+					}
+				}
+			})
+		}
 	}
 
 }
@@ -78,8 +79,7 @@ func main() {
 		panic(err)
 	}
 	messageprocessing.ValidTypes = config.Validtypes
-	helpMessage = config.HelpMessage
-	waitBeforeDelete = config.WaitBeforeDelete
+	configVar = config
 	log.SetOutput(f)
 	log.Println("Start")
 	defer log.Println("End")
