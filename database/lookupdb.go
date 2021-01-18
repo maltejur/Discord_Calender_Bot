@@ -14,6 +14,35 @@ const (
 
 var lookupdb *sql.DB
 
+//ClearLookupDB deletes all tables from Lookupdb
+func ClearLookupDB() error {
+	sqlStmt := `PRAGMA writable_schema = 1;
+	DELETE FROM sqlite_master;
+	PRAGMA writable_schema = 0;
+	VACUUM;
+	PRAGMA integrity_check;`
+	_, err := lookupdb.Exec(sqlStmt)
+	if err != nil {
+		return err
+	}
+	sqlStmt = `CREATE TABLE IF NOT EXISTS "Channels" (
+		id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+		channelID TEXT NOT NULL,
+		channelName TEXT NOT NULL
+	);`
+	_, err = lookupdb.Exec(sqlStmt)
+	if err != nil {
+		return err
+	}
+	sqlStmt = `CREATE TABLE IF NOT EXISTS "Users" (
+		id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+		userID TEXT NOT NULL,
+		userName TEXT NOT NULL
+	);`
+	_, err = lookupdb.Exec(sqlStmt)
+	return err
+}
+
 //NewUserTable creates table for new user in lookupdb
 func NewUserTable(userID string) error {
 	sqlStmt := `CREATE TABLE IF NOT EXISTS "` + userID + `" (

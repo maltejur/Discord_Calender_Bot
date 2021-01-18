@@ -22,6 +22,9 @@ var Lookup map[string][]database.Channel
 //KnownChannels List of all ChannelIDs the bot has appointments of
 var KnownChannels map[string]struct{}
 
+//KnownGuilds Array of all Guilds the bot
+var KnownGuilds []string
+
 //ValidTypes for appointment, to be populated from config
 var ValidTypes []string
 
@@ -88,7 +91,7 @@ func SetAppointment(s *discordgo.Session, m *discordgo.MessageCreate) *discordgo
 	var botM *discordgo.Message
 	if !ex {
 		ch, _ := s.Channel(m.ChannelID)
-		populateLookupForGuild(ch, s)
+		PopulateLookupForGuild(ch.GuildID, s)
 	}
 	message := strings.Split(m.Content[1:], " ")
 	var description string
@@ -183,17 +186,17 @@ func newUserForChannel(user *discordgo.User, channel *discordgo.Channel) error {
 	return err
 }
 
-func populateLookupForGuild(c *discordgo.Channel, s *discordgo.Session) {
-	members, err := s.GuildMembers(c.GuildID, "", 1000)
+func PopulateLookupForGuild(guildID string, s *discordgo.Session) {
+	members, err := s.GuildMembers(guildID, "", 1000)
 	if err != nil {
 		log.Printf("Error getting members: %s \n", err.Error())
-		s.ChannelMessageSend(c.ID, "An error occourd, could not get members of guild")
+		//s.ChannelMessageSend(c.ID, "An error occourd, could not get members of guild")
 		return
 	}
-	channels, err := s.GuildChannels(c.GuildID)
+	channels, err := s.GuildChannels(guildID)
 	if err != nil {
 		log.Printf("Error getting channels: %s \n", err.Error())
-		s.ChannelMessageSend(c.ID, "An error occourd, the bot could not get the channels of the guild")
+		//s.ChannelMessageSend(c.ID, "An error occourd, the bot could not get the channels of the guild")
 		return
 	}
 	for _, channel := range channels {
@@ -202,13 +205,13 @@ func populateLookupForGuild(c *discordgo.Channel, s *discordgo.Session) {
 			err := database.MakeNewChannelTable(channel.ID)
 			if err != nil {
 				log.Printf("Error making table in database: %s \n", err.Error())
-				s.ChannelMessageSend(c.ID, "An error occourd, the bot could not make channel table")
+				//s.ChannelMessageSend(c.ID, "An error occourd, the bot could not make channel table")
 				return
 			}
 			err = database.WriteNewID(channel.ID, channel.Name, database.ChannelC)
 			if err != nil {
 				log.Printf("Error writing new Channel: %s \n", err.Error())
-				s.ChannelMessageSend(c.ID, "An error occourd, could not write new ChannelID")
+				//s.ChannelMessageSend(c.ID, "An error occourd, could not write new ChannelID")
 				return
 			}
 			KnownChannels[channel.ID] = struct{}{}
@@ -221,7 +224,7 @@ func populateLookupForGuild(c *discordgo.Channel, s *discordgo.Session) {
 								err = newUserForChannel(member.User, channel)
 								if err != nil {
 									log.Printf("Error writing new User for Channel: %s \n", err.Error())
-									s.ChannelMessageSend(c.ID, "An error occourd, could not write new User for Channel")
+									//s.ChannelMessageSend(c.ID, "An error occourd, could not write new User for Channel")
 									return
 								}
 								break PermissionBreak
@@ -232,7 +235,7 @@ func populateLookupForGuild(c *discordgo.Channel, s *discordgo.Session) {
 							err = newUserForChannel(member.User, channel)
 							if err != nil {
 								log.Printf("Error writing new User for Channel: %s \n", err.Error())
-								s.ChannelMessageSend(c.ID, "An error occourd, could not write new User for Channel")
+								//s.ChannelMessageSend(c.ID, "An error occourd, could not write new User for Channel")
 								return
 							}
 							break PermissionBreak

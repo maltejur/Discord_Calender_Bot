@@ -40,17 +40,31 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		time.AfterFunc(time.Duration(waitBeforeDelete)*time.Second, func() {
 			err := s.ChannelMessageDelete(m.ChannelID, m.ID)
 			if err != nil {
-				log.Printf("Message could not be deleted: %s", err.Error())
+				log.Printf("Message could not be deleted: %s\n", err.Error())
 			}
 			if botM != nil {
 				err = s.ChannelMessageDelete(botM.ChannelID, botM.ID)
 				if err != nil {
-					log.Printf("Message could not be deleted: %s", err.Error())
+					log.Printf("Message could not be deleted: %s\n", err.Error())
 				}
 			}
 		})
 	}
 
+}
+
+func regenerateLookup(s *discordgo.Session) {
+	messageprocessing.KnownChannels = make(map[string]struct{})
+	messageprocessing.Lookup = make(map[string][]database.Channel)
+	err := database.ClearLookupDB()
+	gs, err := s.UserGuilds(100, "", "")
+	if err != nil {
+		log.Printf("Error geting Guilds of Bot: %s\n", err.Error())
+	}
+	for _, g := range gs {
+		messageprocessing.PopulateLookupForGuild(g.ID, s)
+	}
+	log.Printf("regenerateLookup")
 }
 
 func main() {
@@ -79,11 +93,16 @@ func main() {
 		log.Panic(err)
 	}
 	discord.AddHandler(onMessageCreate)
-
 	err = discord.Open()
 	if err != nil {
 		log.Panic(err)
 	}
+	go func() {
+		for {
+			regenerateLookup(discord)
+			time.Sleep(time.Duration(config.RegenerateLookupTime) * time.Hour)
+		}
+	}()
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
