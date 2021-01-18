@@ -58,7 +58,8 @@ func main() {
 	messageprocessing.KnownChannels = make(map[string]struct{})
 	config := config.ReadConfigFile("config.yaml")
 	//OpenLogFile
-	f, err := os.Create(config.Logfile)
+	f, err := os.OpenFile(config.Logfile,
+		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		panic(err)
 	}
