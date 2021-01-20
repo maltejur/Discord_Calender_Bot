@@ -22,9 +22,6 @@ var Lookup map[string][]database.Channel
 //KnownChannels List of all ChannelIDs the bot has appointments of
 var KnownChannels map[string]struct{}
 
-//KnownGuilds Array of all Guilds the bot
-var KnownGuilds []string
-
 //ValidTypes for appointment, to be populated from config
 var ValidTypes []string
 

@@ -99,8 +99,8 @@ func main() {
 	}
 	go func() {
 		for {
-			regenerateLookup(discord)
 			time.Sleep(time.Duration(config.RegenerateLookupTime) * time.Hour)
+			regenerateLookup(discord)
 		}
 	}()
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
