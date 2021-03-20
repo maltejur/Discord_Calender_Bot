@@ -27,9 +27,10 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Content[0] != '$' {
 		return
 	}
-	if m.GuildID == configVar.AdminChannelID && m.Content[1] != '-' {
+	if m.ChannelID == configVar.AdminChannelID && m.Content[1] == '-' {
 		if m.Content[2:] == "reg" {
 			regenerateLookup(s)
+			return
 		}
 	}
 	if m.GuildID == "" { //Private message
