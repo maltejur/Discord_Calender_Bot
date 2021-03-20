@@ -17,6 +17,7 @@ type Config struct {
 	WaitBeforeDelete     uint64   `yaml:"waitBeforeDelete"`
 	RegenerateLookupTime uint64   `yaml:"regenerateLookupTime"`
 	DeleteMessages       bool     `yaml:"deleteMessages"`
+	AdminChannelID       string   `yaml:"adminchannel"`
 }
 
 //ReadConfigFile parses file at path as yaml and returns result in Config struct
