@@ -27,8 +27,8 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Content[0] != '$' {
 		return
 	}
-	if m.GuildID == configVar.AdminChannelID && m.Content[0] != '-' {
-		if m.Content[1:] == "reg" {
+	if m.GuildID == configVar.AdminChannelID && m.Content[1] != '-' {
+		if m.Content[2:] == "reg" {
 			regenerateLookup(s)
 		}
 	}
@@ -60,6 +60,7 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func regenerateLookup(s *discordgo.Session) {
+	log.Printf("Start regenerateLookup")
 	messageprocessing.KnownChannels = make(map[string]struct{})
 	messageprocessing.Lookup = make(map[string][]database.Channel)
 	err := database.ClearLookupDB()
@@ -70,7 +71,7 @@ func regenerateLookup(s *discordgo.Session) {
 	for _, g := range gs {
 		messageprocessing.PopulateLookupForGuild(g.ID, s)
 	}
-	log.Printf("regenerateLookup")
+	log.Printf("End regenerateLookup")
 }
 
 func main() {
